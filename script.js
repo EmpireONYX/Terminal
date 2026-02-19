@@ -12,13 +12,12 @@ async function hash(text) {
 // Pre-hashed password (hash of: BLACKSUN)
 const correctHash = "e3f553..." // ← replace with real hash
 
-async function checkPassword() {
+function checkPassword() {
     if (locked) return;
 
     const input = document.getElementById("passInput").value;
-    const inputHash = await hash(input);
 
-    if (inputHash === correctHash) {
+    if (input === "BLACKSUN") {
         document.getElementById("message").innerText = "ACCESS GRANTED";
         setTimeout(() => {
             window.location.href = "clearance-alpha.html";
