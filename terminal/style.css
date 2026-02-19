@@ -1,0 +1,26 @@
+body {
+    background: black;
+    color: #00ff88;
+    font-family: monospace;
+    text-align: center;
+    margin-top: 15%;
+}
+
+input {
+    background: black;
+    border: 1px solid #00ff88;
+    color: #00ff88;
+    padding: 10px;
+}
+
+button {
+    background: #003322;
+    color: #00ff88;
+    border: 1px solid #00ff88;
+    padding: 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #005544;
+}
