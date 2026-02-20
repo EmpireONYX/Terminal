@@ -1,5 +1,6 @@
 let attempts = 0;
 let locked = false;
+const frame = document.getElementById("frame");
 
 // Simple hash function
 async function hash(text) {
@@ -36,14 +37,17 @@ function checkPassword() {
 
     if (attempts >= 3) {
       locked = true;
+      frame.classList.add("lockdown");
       document.getElementById("message").innerText = "TERMINAL LOCKED";
         document.getElementById("statusText").innerText = "LOCKED";
       setTimeout(() => {
         locked = false;
         attempts = 0;
+        frame.classList.remove("lockdown");
         document.getElementById("message").innerText = "";
       }, 10000);
     }
   }
 }
+
 
