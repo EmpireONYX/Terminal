@@ -145,11 +145,11 @@ body{
   z-index: 3;
 }
 .frame::before{
-  top:12px; left:12px;
+  top:11px; left:11px;
   border-right:none; border-bottom:none;
 }
 .frame::after{
-  bottom:12px; right:12px;
+  bottom:11px; right:11px;
   border-left:none; border-top:none;
 }
 
@@ -594,5 +594,6 @@ h1{
   .leftRail,.rightRail{ order:2; }
   .centerPanel{ order:1; }
 }
+
 
 
