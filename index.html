@@ -4,15 +4,107 @@
     <title>ACCESS TERMINAL</title>
     <link rel="stylesheet" href="style.css">
 </head>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SECURE ACCESS PORTAL</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
 <body>
+  <div class="bg"></div>
 
-<div class="terminal">
-    <h2>SECURE ACCESS NODE</h2>
-    <input type="password" id="passInput" placeholder="ENTER ACCESS CODE">
-    <button onclick="checkPassword()">AUTHENTICATE</button>
-    <p id="message"></p>
-</div>
+  <main class="wrap">
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot"></span>
+        <span class="brandText">SECURE ACCESS PORTAL</span>
+      </div>
+      <div class="sys">
+        <span class="pill">NET: ONLINE</span>
+        <span class="pill">NODE: A-17</span>
+        <span class="pill">TIME: <span id="clock">--:--:--</span></span>
+      </div>
+    </header>
 
-<script src="script.js"></script>
+    <section class="frame">
+      <div class="frameHeader">
+        <div class="title">
+          <span class="tag">AUTH</span>
+          <h1>ENTER ACCESS CODE</h1>
+        </div>
+        <div class="status">
+          <span class="label">STATUS</span>
+          <span class="value" id="statusText">AWAITING INPUT</span>
+        </div>
+      </div>
+
+      <div class="frameBody">
+        <div class="leftRail">
+          <div class="railTitle">C-P DESCRIPTION</div>
+          <div class="railBox">
+            <div class="tiny">Clearance gate</div>
+            <div class="tiny">Attempts lockout: enabled</div>
+            <div class="tiny">Audit: active</div>
+          </div>
+          <div class="railTitle">ANALYZE</div>
+        </div>
+
+        <div class="centerPanel">
+          <div class="inputRow">
+            <label class="label" for="passInput">ACCESS CODE</label>
+            <input id="passInput" type="password" autocomplete="off" spellcheck="false" placeholder="TYPE CODE…" />
+          </div>
+
+          <div class="actions">
+            <button class="btn" onclick="checkPassword()">AUTHENTICATE</button>
+            <button class="btn ghost" onclick="document.getElementById('passInput').value=''; document.getElementById('message').innerText=''; document.getElementById('statusText').innerText='AWAITING INPUT';">CLEAR</button>
+          </div>
+
+          <div class="msg" id="message" aria-live="polite"></div>
+
+          <div class="divider"></div>
+
+          <div class="log">
+            <div class="logLine">/SYS/ handshake ok</div>
+            <div class="logLine">/AUTH/ ready</div>
+            <div class="logLine">/WARN/ unauthorized access will be logged</div>
+          </div>
+        </div>
+
+        <div class="rightRail">
+          <div class="bracket"></div>
+          <div class="rightText">
+            <div class="tiny">FRAME: FS-01</div>
+            <div class="tiny">SIG: 0xA19F</div>
+            <div class="tiny">MODE: LOCKSTEP</div>
+          </div>
+          <div class="bracket bottom"></div>
+        </div>
+      </div>
+
+      <footer class="frameFooter">
+        <span class="footTiny">ENFORCE HTTPS</span>
+        <span class="footTiny">TRACE: ENABLED</span>
+        <span class="footTiny">BUILD: 1.0</span>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    // tiny clock (theme vibe)
+    const clockEl = document.getElementById("clock");
+    setInterval(() => {
+      const d = new Date();
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      const ss = String(d.getSeconds()).padStart(2, "0");
+      clockEl.textContent = `${hh}:${mm}:${ss}`;
+    }, 250);
+  </script>
+
+  <script src="script.js"></script>
 </body>
 </html>
