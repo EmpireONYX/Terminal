@@ -1,53 +1,83 @@
 let attempts = 0;
 let locked = false;
-const frame = document.getElementById("frame");
 
-// Simple hash function
-async function hash(text) {
-    const msgUint8 = new TextEncoder().encode(text);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+function setStatus(text, mode) {
+  const statusEl = document.getElementById("statusText");
+  const msgEl = document.getElementById("message");
+  if (!statusEl || !msgEl) return;
+
+  // reset classes
+  statusEl.classList.remove("ok", "denied", "locked");
+  msgEl.classList.remove("denied", "locked");
+
+  if (mode) statusEl.classList.add(mode);
+  statusEl.innerText = text;
 }
 
-// Pre-hashed password (hash of: BLACKSUN)
-const correctHash = "e3f553..." // ← replace with real hash
+function setMessage(text, mode) {
+  const msgEl = document.getElementById("message");
+  if (!msgEl) return;
 
-if (locked) {
-    document.getElementById("statusText").innerText = "LOCKED";
-    return;
+  msgEl.classList.remove("denied", "locked");
+  if (mode) msgEl.classList.add(mode);
+  msgEl.innerText = text;
+}
+
+function setLockdown(on) {
+  const frame = document.getElementById("frame");
+  if (!frame) return; // prevents crashes on other pages
+  frame.classList.toggle("lockdown", on);
+}
+
 function checkPassword() {
-  if (locked) return;
+  // If locked, show state and refuse
+  if (locked) {
+    setStatus("LOCKED", "locked");
+    setMessage("TERMINAL LOCKED", "locked");
+    setLockdown(true);
+    return;
+  }
 
   const input = document.getElementById("passInput").value;
 
   if (input === "BLACKSUN") {
+    setStatus("AUTH OK", "ok");
+    setMessage("ACCESS GRANTED");
     window.location.href = "clearance-alpha.html";
-      document.getElementById("statusText").innerText = "AUTH OK";
-  } else if (input === "REDSHADOW") {
-    window.location.href = "clearance-beta.html";
-      document.getElementById("statusText").innerText = "AUTH OK";
-  } else if (input === "OMEGA//EYESONLY") {
-    window.location.href = "clearance-omega.html";
-      document.getElementById("statusText").innerText = "AUTH OK";
-  } else {
-    attempts++;
-    document.getElementById("message").innerText = "ACCESS DENIED";
-      document.getElementById("statusText").innerText = "DENIED";
+    return;
+  }
 
-    if (attempts >= 3) {
-      locked = true;
-      frame.classList.add("lockdown");
-      document.getElementById("message").innerText = "TERMINAL LOCKED";
-        document.getElementById("statusText").innerText = "LOCKED";
-      setTimeout(() => {
-        locked = false;
-        attempts = 0;
-        frame.classList.remove("lockdown");
-        document.getElementById("message").innerText = "";
-      }, 10000);
-    }
+  if (input === "REDSHADOW") {
+    setStatus("AUTH OK", "ok");
+    setMessage("ACCESS GRANTED");
+    window.location.href = "clearance-beta.html";
+    return;
+  }
+
+  if (input === "OMEGA//EYESONLY") {
+    setStatus("AUTH OK", "ok");
+    setMessage("ACCESS GRANTED");
+    window.location.href = "clearance-omega.html";
+    return;
+  }
+
+  // Wrong code
+  attempts++;
+  setStatus("DENIED", "denied");
+  setMessage("ACCESS DENIED", "denied");
+
+  if (attempts >= 3) {
+    locked = true;
+    setLockdown(true);
+    setStatus("LOCKED", "locked");
+    setMessage("TERMINAL LOCKED", "locked");
+
+    setTimeout(() => {
+      locked = false;
+      attempts = 0;
+      setLockdown(false);
+      setStatus("AWAITING INPUT", "");
+      setMessage("", "");
+    }, 10000);
   }
 }
-
-
