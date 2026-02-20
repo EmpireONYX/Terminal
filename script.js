@@ -50,7 +50,23 @@ function lockOut(){
     window.location.href = "terminated.html";
   }, 450);
 }
+// Clock
+const clockEl = document.getElementById("clock");
+setInterval(() => {
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  clockEl.textContent = `${hh}:${mm}:${ss}`;
+}, 250);
 
+// Clear button behavior
+function clearUI() {
+  document.getElementById("passInput").value = "";
+  document.getElementById("message").innerText = "";
+  document.getElementById("statusText").innerText = "AWAITING INPUT";
+  document.getElementById("frame").classList.remove("lockdown");
+}
 function checkPassword(){
   if (locked) return;
 
@@ -100,3 +116,4 @@ function clearInput(){
 // Make functions accessible to onclick="..."
 window.checkPassword = checkPassword;
 window.clearInput = clearInput;
+
