@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TERMINATED</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg"></div>
+
+  <div class="termWrap">
+    <div class="termHud">
+      <div class="termTop">
+        <span class="termDot"></span>
+        <span class="termTitle">SECURITY TERMINATION</span>
+        <span class="termMini" id="termClock"></span>
+      </div>
+
+      <div class="termMid">
+        <div class="termBracket left"></div>
+        <div class="termCore">
+          <div class="termLabel">C-P DESCRIPTION</div>
+
+          <div class="termPanel">
+            <div class="termPanelHead">AUTH REQUEST TERMINATED</div>
+            <div class="termPanelBody">
+              <div>PRECAUTIONS: ENFORCED</div>
+              <div>LOCKDOWN: ACTIVE</div>
+              <div>TRACE: ENABLED</div>
+              <div class="termWarn">UNAUTHORIZED ACCESS WILL BE LOGGED</div>
+            </div>
+          </div>
+
+          <div class="termAction">
+            <div class="termSub">RETRY AVAILABLE IN</div>
+            <div class="termCountdown" id="termCountdown">--</div>
+          </div>
+        </div>
+        <div class="termBracket right"></div>
+      </div>
+
+      <div class="termBottom">
+        <span class="termMini">ANALYZE</span>
+        <span class="termMini">SIG: 0xA19F</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // simple HUD clock
+    const clockEl = document.getElementById("termClock");
+    setInterval(() => {
+      const d = new Date();
+      clockEl.textContent = d.toLocaleTimeString();
+    }, 250);
+
+    // countdown until unlock (stored by index page)
+    const cdEl = document.getElementById("termCountdown");
+    function tick() {
+      const lockUntil = Number(localStorage.getItem("lockUntil") || "0");
+      const leftMs = Math.max(0, lockUntil - Date.now());
+      const left = Math.ceil(leftMs / 1000);
+
+      cdEl.textContent = left > 0 ? `${left}s` : "0s";
+
+      if (leftMs <= 0) {
+        localStorage.removeItem("lockUntil");
+        // go back to terminal
+        window.location.href = "index.html";
+      }
+      requestAnimationFrame(tick);
+    }
+    tick();
+  </script>
+</body>
+</html>
