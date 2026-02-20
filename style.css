@@ -149,7 +149,7 @@ body{
   border-right:none; border-bottom:none;
 }
 .frame::after{
-  bottom:60px; right:14px;
+  bottom:13px; right:14px;
   border-left:none; border-top:none;
 }
 
@@ -594,3 +594,4 @@ h1{
   .leftRail,.rightRail{ order:2; }
   .centerPanel{ order:1; }
 }
+
