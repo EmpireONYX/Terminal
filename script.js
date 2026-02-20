@@ -1,83 +1,102 @@
 let attempts = 0;
 let locked = false;
 
-function setStatus(text, mode) {
-  const statusEl = document.getElementById("statusText");
-  const msgEl = document.getElementById("message");
-  if (!statusEl || !msgEl) return;
+const frame = document.getElementById("frame");
+const statusText = document.getElementById("statusText");
+const message = document.getElementById("message");
+const passInput = document.getElementById("passInput");
 
-  // reset classes
-  statusEl.classList.remove("ok", "denied", "locked");
-  msgEl.classList.remove("denied", "locked");
+const LOCK_SECONDS = 10;
 
-  if (mode) statusEl.classList.add(mode);
-  statusEl.innerText = text;
-}
-
-function setMessage(text, mode) {
-  const msgEl = document.getElementById("message");
-  if (!msgEl) return;
-
-  msgEl.classList.remove("denied", "locked");
-  if (mode) msgEl.classList.add(mode);
-  msgEl.innerText = text;
-}
-
-function setLockdown(on) {
-  const frame = document.getElementById("frame");
-  if (!frame) return; // prevents crashes on other pages
-  frame.classList.toggle("lockdown", on);
-}
-
-function checkPassword() {
-  // If locked, show state and refuse
-  if (locked) {
-    setStatus("LOCKED", "locked");
-    setMessage("TERMINAL LOCKED", "locked");
-    setLockdown(true);
-    return;
-  }
-
-  const input = document.getElementById("passInput").value;
-
-  if (input === "BLACKSUN") {
-    setStatus("AUTH OK", "ok");
-    setMessage("ACCESS GRANTED");
-    window.location.href = "clearance-alpha.html";
-    return;
-  }
-
-  if (input === "REDSHADOW") {
-    setStatus("AUTH OK", "ok");
-    setMessage("ACCESS GRANTED");
-    window.location.href = "clearance-beta.html";
-    return;
-  }
-
-  if (input === "OMEGA//EYESONLY") {
-    setStatus("AUTH OK", "ok");
-    setMessage("ACCESS GRANTED");
-    window.location.href = "clearance-omega.html";
-    return;
-  }
-
-  // Wrong code
-  attempts++;
-  setStatus("DENIED", "denied");
-  setMessage("ACCESS DENIED", "denied");
-
-  if (attempts >= 3) {
+// If user refreshes while locked, keep them locked
+(function bootLockState(){
+  const lockUntil = Number(localStorage.getItem("lockUntil") || "0");
+  if (lockUntil > Date.now()) {
     locked = true;
-    setLockdown(true);
-    setStatus("LOCKED", "locked");
-    setMessage("TERMINAL LOCKED", "locked");
-
-    setTimeout(() => {
-      locked = false;
-      attempts = 0;
-      setLockdown(false);
-      setStatus("AWAITING INPUT", "");
-      setMessage("", "");
-    }, 10000);
+    window.location.href = "terminated.html";
+  } else {
+    localStorage.removeItem("lockUntil");
   }
+})();
+
+function setStatus(mode, text){
+  // mode: "ok" | "denied" | "locked" | "" (neutral)
+  statusText.classList.remove("ok","denied","locked");
+  message.classList.remove("denied","locked");
+
+  if (mode) statusText.classList.add(mode);
+  if (mode === "denied") message.classList.add("denied");
+  if (mode === "locked") message.classList.add("locked");
+
+  statusText.innerText = text;
 }
+
+function setLockdown(on){
+  if (!frame) return;
+  frame.classList.toggle("lockdown", !!on);
+}
+
+function lockOut(){
+  locked = true;
+  setLockdown(true);
+  setStatus("locked","LOCKED");
+  message.innerText = "AUTH REQUEST TERMINATED";
+
+  const lockUntil = Date.now() + LOCK_SECONDS * 1000;
+  localStorage.setItem("lockUntil", String(lockUntil));
+
+  // small delay so user sees the message flash, then go full HUD
+  setTimeout(() => {
+    window.location.href = "terminated.html";
+  }, 450);
+}
+
+function checkPassword(){
+  if (locked) return;
+
+  const input = (passInput.value || "").trim();
+
+  // optional: normalize case
+  const code = input.toUpperCase();
+
+  setStatus("", "AUTHENTICATING...");
+  message.innerText = "";
+
+  // small “processing” delay
+  setTimeout(() => {
+    if (code === "BLACKSUN") {
+      setStatus("ok","AUTH OK");
+      window.location.href = "clearance-alpha.html";
+      return;
+    }
+    if (code === "REDSHADOW") {
+      setStatus("ok","AUTH OK");
+      window.location.href = "clearance-beta.html";
+      return;
+    }
+    if (code === "OMEGA//EYESONLY") {
+      setStatus("ok","AUTH OK");
+      window.location.href = "clearance-omega.html";
+      return;
+    }
+
+    attempts++;
+    setStatus("denied","DENIED");
+    message.innerText = `ACCESS DENIED (${attempts}/3)`;
+
+    if (attempts >= 3) {
+      lockOut();
+    }
+  }, 600);
+}
+
+// Optional clear button handler (if you have a CLEAR button)
+function clearInput(){
+  passInput.value = "";
+  message.innerText = "";
+  setStatus("", "AWAITING INPUT");
+}
+
+// Make functions accessible to onclick="..."
+window.checkPassword = checkPassword;
+window.clearInput = clearInput;
