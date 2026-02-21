@@ -8,7 +8,7 @@ const passInput = document.getElementById("passInput");
 
 const LOCK_SECONDS = 10;
 
-const WORKER_URL = "https://YOUR-WORKER.workers.dev";
+const WORKER_URL = "https://arbiter-log.damshadow1123.workers.dev";
 
 async function logEvent(event, reason, meta = {}) {
   try {
@@ -168,4 +168,5 @@ function clearInput(){
 
 window.checkPassword = checkPassword;
 window.clearInput = clearInput;
+
 
