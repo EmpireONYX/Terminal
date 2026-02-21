@@ -48,15 +48,31 @@
   </div>
 
   <script>
-    // simple HUD clock
-    const clockEl = document.getElementById("termClock");
-    setInterval(() => {
-      const d = new Date();
-      clockEl.textContent = d.toLocaleTimeString();
-    }, 250);
+  // simple HUD clock
+  const clockEl = document.getElementById("termClock");
+  setInterval(() => {
+    const d = new Date();
+    clockEl.textContent = d.toLocaleTimeString();
+  }, 250);
 
-    // countdown until unlock (stored by index page)
-    const cdEl = document.getElementById("termCountdown");
+  // pull dynamic termination text
+  const titleEl = document.getElementById("termTitle");
+  const warnEl = document.getElementById("termWarn");
+  const retryBlock = document.getElementById("retryBlock");
+  const cdEl = document.getElementById("termCountdown");
+
+  const termMode = localStorage.getItem("termMode") || "LOCK";
+  const tTitle = localStorage.getItem("termTitle");
+  const tWarn  = localStorage.getItem("termWarn");
+
+  if (tTitle) titleEl.textContent = tTitle;
+  if (tWarn)  warnEl.textContent  = tWarn;
+
+  if (termMode === "HARD") {
+    // No retry, no countdown
+    retryBlock.style.display = "none";
+  } else {
+    // Countdown mode
     function tick() {
       const lockUntil = Number(localStorage.getItem("lockUntil") || "0");
       const leftMs = Math.max(0, lockUntil - Date.now());
@@ -66,12 +82,15 @@
 
       if (leftMs <= 0) {
         localStorage.removeItem("lockUntil");
-        // go back to terminal
+        localStorage.removeItem("termMode");
+        localStorage.removeItem("termTitle");
+        localStorage.removeItem("termWarn");
         window.location.href = "index.html";
       }
-      requestAnimationFrame(tick);
     }
     tick();
-  </script>
+    setInterval(tick, 200);
+  }
+</script>
 </body>
 </html>
