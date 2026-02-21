@@ -23,7 +23,7 @@
           <div class="termLabel">C-P DESCRIPTION</div>
 
           <div class="termPanel">
-            <<div class="termPanelHead" id="termTitle">AUTH REQUEST TERMINATED</div>
+            <div class="termPanelHead" id="termTitle">AUTH REQUEST TERMINATED</div>
             <div class="termPanelBody">
               <div>PRECAUTIONS: ENFORCED</div>
               <div>LOCKDOWN: ACTIVE</div>
@@ -35,8 +35,9 @@
           <div class="termAction" id="retryBlock">
   <div class="termSub">RETRY AVAILABLE IN</div>
   <div class="termCountdown" id="termCountdown">--</div>
+ </div>
 </div>
-        </div>
+        
         <div class="termBracket right"></div>
       </div>
 
@@ -91,6 +92,44 @@
     tick();
     setInterval(tick, 200);
   }
+</script>
+  <script>
+  const ADMIN_CLEAR_CODE = "ARBITER-CLEAR"; // must match index.js
+  let adminBuffer = "";
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key.length === 1) {
+      adminBuffer += e.key.toUpperCase();
+      adminBuffer = adminBuffer.slice(-32); // keep buffer short
+    }
+
+    if (e.key === "Enter") {
+      if (adminBuffer.includes(ADMIN_CLEAR_CODE)) {
+        // Clear all termination state
+        localStorage.removeItem("termMode");
+        localStorage.removeItem("termTitle");
+        localStorage.removeItem("termWarn");
+        localStorage.removeItem("termReason");
+        localStorage.removeItem("lockUntil");
+
+        // Optional: log admin clear
+        fetch("https://arbiter-log.damshadow1123.workers.dev", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event: "ADMIN_CLEAR",
+            reason: "TERMINATED_PAGE_OVERRIDE",
+            page: location.pathname,
+            meta: { ua: navigator.userAgent }
+          })
+        }).catch(() => {});
+
+        window.location.href = "index.html";
+      }
+
+      adminBuffer = "";
+    }
+  });
 </script>
 </body>
 </html>
