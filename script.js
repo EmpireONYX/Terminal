@@ -10,6 +10,8 @@ const LOCK_SECONDS = 10;
 
 const WORKER_URL = "https://arbiter-log.damshadow1123.workers.dev";
 
+const ADMIN_CLEAR_CODE = "ARBITER-CLEAR"; // change to whatever you want
+
 async function logEvent(event, reason, meta = {}) {
   try {
     await fetch(WORKER_URL, {
@@ -51,6 +53,7 @@ async function logEvent(event, reason, meta = {}) {
     localStorage.removeItem("termMode");
     localStorage.removeItem("termTitle");
     localStorage.removeItem("termWarn");
+    localStorage.removeItem("termReason");
   }
 })();
 
@@ -73,6 +76,7 @@ function setLockdown(on){
 /** Normal lockout: countdown + auto-return */
 function lockOut(){
   locked = true;
+  logEvent("LOCKOUT", "3_WRONG_CODES", { attempts });
   setLockdown(true);
   setStatus("locked","LOCKED");
   message.innerText = "TERMINAL LOCKED";
@@ -92,6 +96,7 @@ function lockOut(){
 /** Hard termination: no countdown, stays until you clear it */
 function terminate(reasonCode = "OMEGA_EXPOSURE"){
   locked = true;
+  logEvent("TERMINATE", reasonCode, { attempts });
   setLockdown(true);
   setStatus("locked","TERMINATED");
   message.innerText = "EXPOSURE EVENT CONFIRMED";
@@ -110,6 +115,22 @@ function terminate(reasonCode = "OMEGA_EXPOSURE"){
   }, 450);
 }
 
+function adminClear(){
+  // clears HARD termination + normal lockout
+  localStorage.removeItem("termMode");
+  localStorage.removeItem("termTitle");
+  localStorage.removeItem("termWarn");
+  localStorage.removeItem("termReason");
+  localStorage.removeItem("lockUntil");
+  attempts = 0;
+  locked = false;
+  setLockdown(false);
+  setStatus("", "AWAITING INPUT");
+  message.innerText = "";
+
+  logEvent("ADMIN_CLEAR", "MANUAL_OVERRIDE", {});
+}
+
 // Clock
 const clockEl = document.getElementById("clock");
 setInterval(() => {
@@ -121,9 +142,18 @@ setInterval(() => {
 }, 250);
 
 function checkPassword(){
-  if (locked) return;
+  if (locked) {
+  const codeTry = (passInput.value || "").trim().toUpperCase();
+  if (codeTry === ADMIN_CLEAR_CODE) {
+    adminClear();
+    clearInput();
+  }
+  return;
+}
 
   const code = (passInput.value || "").trim().toUpperCase();
+  // Admin override (works even during HARD termination)
+}
 
   setStatus("", "AUTHENTICATING...");
   message.innerText = "";
@@ -153,10 +183,13 @@ function checkPassword(){
     }
 
     attempts++;
-    setStatus("denied","DENIED");
-    message.innerText = `ACCESS DENIED (${attempts}/3)`;
+setStatus("denied","DENIED");
+message.innerText = `ACCESS DENIED (${attempts}/3)`;
 
-    if (attempts >= 3) lockOut();
+// A) LOG FAILED ATTEMPT  👈 RIGHT HERE
+logEvent("DENY", "BAD_CODE", { attempt: attempts });
+
+if (attempts >= 3) lockOut();
   }, 600);
 }
 
@@ -168,5 +201,3 @@ function clearInput(){
 
 window.checkPassword = checkPassword;
 window.clearInput = clearInput;
-
-
