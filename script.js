@@ -8,6 +8,29 @@ const passInput = document.getElementById("passInput");
 
 const LOCK_SECONDS = 10;
 
+const WORKER_URL = "https://YOUR-WORKER.workers.dev";
+
+async function logEvent(event, reason, meta = {}) {
+  try {
+    await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event,
+        reason,
+        page: location.pathname,
+        meta: {
+          attempts,
+          ua: navigator.userAgent,
+          ...meta,
+        },
+      }),
+    });
+  } catch (e) {
+    // logging failure should never block UX
+  }
+}
+
 // If user refreshes while locked/terminated, keep them in terminated page
 (function bootLockState(){
   const lockUntil = Number(localStorage.getItem("lockUntil") || "0");
@@ -145,3 +168,4 @@ function clearInput(){
 
 window.checkPassword = checkPassword;
 window.clearInput = clearInput;
+
