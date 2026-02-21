@@ -8,19 +8,30 @@ const passInput = document.getElementById("passInput");
 
 const LOCK_SECONDS = 10;
 
-// If user refreshes while locked, keep them locked
+// If user refreshes while locked/terminated, keep them in terminated page
 (function bootLockState(){
   const lockUntil = Number(localStorage.getItem("lockUntil") || "0");
+  const termMode = localStorage.getItem("termMode") || "";
+
+  // If it's a HARD termination (no retry), always stay terminated until cleared manually
+  if (termMode === "HARD") {
+    window.location.href = "terminated.html";
+    return;
+  }
+
+  // Normal lockout timer
   if (lockUntil > Date.now()) {
     locked = true;
     window.location.href = "terminated.html";
   } else {
     localStorage.removeItem("lockUntil");
+    localStorage.removeItem("termMode");
+    localStorage.removeItem("termTitle");
+    localStorage.removeItem("termWarn");
   }
 })();
 
 function setStatus(mode, text){
-  // mode: "ok" | "denied" | "locked" | "" (neutral)
   statusText.classList.remove("ok","denied","locked");
   message.classList.remove("denied","locked");
 
@@ -36,20 +47,46 @@ function setLockdown(on){
   frame.classList.toggle("lockdown", !!on);
 }
 
+/** Normal lockout: countdown + auto-return */
 function lockOut(){
   locked = true;
   setLockdown(true);
   setStatus("locked","LOCKED");
-  message.innerText = "AUTH REQUEST TERMINATED";
+  message.innerText = "TERMINAL LOCKED";
+
+  localStorage.setItem("termMode", "LOCK");                 // show countdown
+  localStorage.setItem("termTitle", "AUTH REQUEST TERMINATED");
+  localStorage.setItem("termWarn", "UNAUTHORIZED ACCESS WILL BE LOGGED");
 
   const lockUntil = Date.now() + LOCK_SECONDS * 1000;
   localStorage.setItem("lockUntil", String(lockUntil));
 
-  // small delay so user sees the message flash, then go full HUD
   setTimeout(() => {
     window.location.href = "terminated.html";
   }, 450);
 }
+
+/** Hard termination: no countdown, stays until you clear it */
+function terminate(reasonCode = "OMEGA_EXPOSURE"){
+  locked = true;
+  setLockdown(true);
+  setStatus("locked","TERMINATED");
+  message.innerText = "EXPOSURE EVENT CONFIRMED";
+
+  localStorage.setItem("termMode", "HARD");                 // hide countdown
+  localStorage.removeItem("lockUntil");                     // no timer
+  localStorage.setItem("termTitle", "EXPOSURE EVENT CONFIRMED");
+  localStorage.setItem(
+    "termWarn",
+    "REMAIN CALM. DO NOT DISCONNECT. ARBITER RESPONSE UNIT EN ROUTE."
+  );
+  localStorage.setItem("termReason", reasonCode);
+
+  setTimeout(() => {
+    window.location.href = "terminated.html";
+  }, 450);
+}
+
 // Clock
 const clockEl = document.getElementById("clock");
 setInterval(() => {
@@ -60,25 +97,14 @@ setInterval(() => {
   clockEl.textContent = `${hh}:${mm}:${ss}`;
 }, 250);
 
-// Clear button behavior
-function clearUI() {
-  document.getElementById("passInput").value = "";
-  document.getElementById("message").innerText = "";
-  document.getElementById("statusText").innerText = "AWAITING INPUT";
-  document.getElementById("frame").classList.remove("lockdown");
-}
 function checkPassword(){
   if (locked) return;
 
-  const input = (passInput.value || "").trim();
-
-  // optional: normalize case
-  const code = input.toUpperCase();
+  const code = (passInput.value || "").trim().toUpperCase();
 
   setStatus("", "AUTHENTICATING...");
   message.innerText = "";
 
-  // small “processing” delay
   setTimeout(() => {
     if (code === "BLACKSUN") {
       setStatus("ok","AUTH OK");
@@ -96,24 +122,26 @@ function checkPassword(){
       return;
     }
 
+    // Example: if someone tries to type an "ultra-confidential" bait keyword => HARD terminate
+    // You can change this to whatever "big info" triggers you want.
+    if (code.includes("ARBITER") || code.includes("OMEGA")) {
+      terminate("CONFIDENTIAL_KEYWORD_TRIP");
+      return;
+    }
+
     attempts++;
     setStatus("denied","DENIED");
     message.innerText = `ACCESS DENIED (${attempts}/3)`;
 
-    if (attempts >= 3) {
-      lockOut();
-    }
+    if (attempts >= 3) lockOut();
   }, 600);
 }
 
-// Optional clear button handler (if you have a CLEAR button)
 function clearInput(){
   passInput.value = "";
   message.innerText = "";
   setStatus("", "AWAITING INPUT");
 }
 
-// Make functions accessible to onclick="..."
 window.checkPassword = checkPassword;
 window.clearInput = clearInput;
-
