@@ -141,55 +141,52 @@ setInterval(() => {
   clockEl.textContent = `${hh}:${mm}:${ss}`;
 }, 250);
 
-function checkPassword(){
-  if (locked) {
+function checkPassword() {
+  // allow admin clear even if locked
   const codeTry = (passInput.value || "").trim().toUpperCase();
   if (codeTry === ADMIN_CLEAR_CODE) {
     adminClear();
     clearInput();
+    return;
   }
-  return;
-}
 
-  const code = (passInput.value || "").trim().toUpperCase();
-  // Admin override (works even during HARD termination)
-}
+  if (locked) return;
+
+  const code = codeTry;
 
   setStatus("", "AUTHENTICATING...");
   message.innerText = "";
 
   setTimeout(() => {
     if (code === "BLACKSUN") {
-      setStatus("ok","AUTH OK");
+      setStatus("ok", "AUTH OK");
       window.location.href = "clearance-alpha.html";
       return;
     }
     if (code === "REDSHADOW") {
-      setStatus("ok","AUTH OK");
+      setStatus("ok", "AUTH OK");
       window.location.href = "clearance-beta.html";
       return;
     }
     if (code === "OMEGA//EYESONLY") {
-      setStatus("ok","AUTH OK");
+      setStatus("ok", "AUTH OK");
       window.location.href = "clearance-omega.html";
       return;
     }
 
-    // Example: if someone tries to type an "ultra-confidential" bait keyword => HARD terminate
-    // You can change this to whatever "big info" triggers you want.
+    // tripwire -> HARD terminate
     if (code.includes("ARBITER") || code.includes("OMEGA")) {
       terminate("CONFIDENTIAL_KEYWORD_TRIP");
       return;
     }
 
     attempts++;
-setStatus("denied","DENIED");
-message.innerText = `ACCESS DENIED (${attempts}/3)`;
+    setStatus("denied", "DENIED");
+    message.innerText = `ACCESS DENIED (${attempts}/3)`;
 
-// A) LOG FAILED ATTEMPT  👈 RIGHT HERE
-logEvent("DENY", "BAD_CODE", { attempt: attempts });
+    logEvent("DENY", "BAD_CODE", { attempt: attempts });
 
-if (attempts >= 3) lockOut();
+    if (attempts >= 3) lockOut();
   }, 600);
 }
 
@@ -201,3 +198,4 @@ function clearInput(){
 
 window.checkPassword = checkPassword;
 window.clearInput = clearInput;
+
